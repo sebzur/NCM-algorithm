@@ -1,4 +1,6 @@
-Norm Components Matrix (NCM) algorithm for correlation sums calculation
-usefull for the evaluation of the correlation dimension and the sample entropy of the time series.
+Norm Components Matrix (NCM) algorithm for the correlation sums calculation.
 
-This is the parallel (and serial in production) implementation written in Pythonon.
+The correlation sums are the building block for the evaluation of correlation dimension 
+and the sample entropy -- complexity parameters useful in the (medical) time series analysis.
+
+This is the parallel implementation written in Python language.
