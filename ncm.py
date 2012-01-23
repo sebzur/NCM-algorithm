@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # 17 Feb. 2011, 22:52:27 CET
 # Leiden, The Netherlands
 
@@ -6,10 +5,8 @@ import numpy
 import sys
 import os
 import time
-#import matplotlib.pyplot as plt
 import rea
 import itertools
-#from pylab. import import 
 
 def logistic_map(x, A, length):
     wynik=[]
@@ -172,48 +169,9 @@ class FNCMatrix(object):
             return None
 #        return corsum_matrix.transpose()
 
-def test(signal, m, tau, r):
-    total = 0
-    factorA = len(signal) - (m -1) * tau
-    factorB = len(signal) - (m -1) * tau - 1
-    for i in range(len(signal) - (m -1) * tau):
-        template = numpy.array(signal[i:i + m:tau])
-        for j in range(len(signal) - (m -1) * tau):
-            if i == j:
-                continue
-            checked = numpy.array(signal[j:j+m:tau])
-            total += numpy.abs((template - checked)).max() <= r
-    return total, 1.0/ (factorA * factorB), total * 1.0/ (factorA * factorB)
 
-if __name__ == "__main__":
-
-    if rank == 0:
-        ts = time.time()
-
-
-    signal_data = sys.argv[1]
-    tau = int(sys.argv[2])
-    m = int(sys.argv[3])
-
-    
-    #print rea.REA('simple_test_2.txt', skiprows=0).get_signal()
-    #print numpy.loadtxt('simple_test_3.txt')
-
-    rea_reader = rea.REA(signal_data, skiprows=0)
-    signal = rea_reader.get_signal()
-
-    #N = 1000
-    #signal = logistic_map(0.4, 3.99, N)
-    #signal = numpy.array([1.2, 1.3, 1.1, 1.2, 1.3])
-
-
-    #signal = numpy.loadtxt(signal_data)
-    #print signal
-
-    #print 'LENGTH:', len(signal)
-
+def do(signal, tau, max_m):
     ncm = FNCMatrix(signal, 0, signal.size)
-    #ncm = NCMatrix(signal)
 
     r_std = signal.std()
 
@@ -221,25 +179,14 @@ if __name__ == "__main__":
     r_max = r_std * 5.0
     r_step = (r_max - r_min)/100
     print 'R_min', r_min, 'R_max', r_max
-    
     r_range = numpy.arange(r_min, r_max, r_step)[::-1]
-    #r_range = numpy.arange(r_std * 0.1, r_std, r_std * 0.1)
-    #print 'RANGE', r_range
-#    for row in ncm.generate_rows(tau):
-#        print row
+    m_range = range(1, max_m + 1) # zawsze prawa strona nie wchodzi
 
-    m_range = range(1, m + 1) # zawsze prawa strona nie wchodzi
-
-
-#    for r in  r_range:
-#        d = test(signal, 1, 1, r)
-#        print r, d[0]
-
-
-    #print r_range
     c_m = ncm.corsum_matrix(m_range, r_range, tau)
 
-    if rank == 0 and 1:
+
+def store():
+    if rank == 0 and 0:
         path = 'tmp/RR/tau_%d/' % tau
         if not os.path.exists(path):
             os.makedirs(path)
@@ -256,4 +203,20 @@ if __name__ == "__main__":
         splitted = splitted.split('.')[0]
         time_out.write('%s\t%s\t%.10f\n' % (sys.argv[1], splitted, time.time() - ts))
         time_out.close()
+
+if __name__ == "__main__":
+
+    if rank == 0:
+        ts = time.time()
+
+    data_file_name = sys.argv[1]
+    tau = int(sys.argv[2])
+    max_m = int(sys.argv[3])
+
+    rea_reader = rea.REA(data_file_name, skiprows=0)
+    signal = rea_reader.get_signal()
+
+    do(signal, tau, max_m)
+
+
 

@@ -1,0 +1,22 @@
+def correlation_sum(signal, m, tau, r):
+    """ Caclulates correlaction sum for a signal.
+
+    For the provided embeding space, tau and treshold 
+    calculates correlation sum for a signal entered and
+    returns the number of counts
+
+    """
+    total = 0
+    factorA = len(signal) - (m - 1) * tau
+    factorB = len(signal) - (m - 1) * tau - 1
+    for i in range(len(signal) - (m -1) * tau):
+        template = numpy.array(signal[i:i + m:tau])
+        for j in range(len(signal) - (m - 1) * tau):
+            if i == j:
+                continue
+            checked = numpy.array(signal[j:j+m:tau])
+            total += numpy.abs((template - checked)).max() <= r
+    return total, 1.0/ (factorA * factorB), total * 1.0/ (factorA * factorB)
+
+    
+    
