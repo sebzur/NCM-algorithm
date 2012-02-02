@@ -1,3 +1,4 @@
+# -*- coding: utf-8
 # 17 Feb. 2011, 22:52:27 CET
 # Leiden, The Netherlands
 
@@ -26,7 +27,7 @@ size = comm.Get_size()
 def max_norm(iterable):
     return max(iterable)
 
-class FNCMatrix(object):
+class NCMatrix(object):
     """ Norm Component Matrix """
 
     def __init__(self, series, start, stop):
@@ -141,7 +142,7 @@ class FNCMatrix(object):
 
         for row_n in range(rank, self.N - 1, size):
             for m_index, row in enumerate(self.windups(m_counts, row_n, tau)):
-                # tutaj na mnożeniu możemy zystać..
+                # tutaj na mnozeniu możemy zystać..
                 corsum_matrix[m_index] += self.r_range_filter(row, r_range, a,b)# * 2# * factor
 
             for key in [k for k in self._rows.keys() if k < row_n]:
@@ -170,19 +171,6 @@ class FNCMatrix(object):
 #        return corsum_matrix.transpose()
 
 
-def do(signal, tau, max_m):
-    ncm = FNCMatrix(signal, 0, signal.size)
-
-    r_std = signal.std()
-
-    r_min =  r_std * 0.001
-    r_max = r_std * 5.0
-    r_step = (r_max - r_min)/100
-    print 'R_min', r_min, 'R_max', r_max
-    r_range = numpy.arange(r_min, r_max, r_step)[::-1]
-    m_range = range(1, max_m + 1) # zawsze prawa strona nie wchodzi
-
-    c_m = ncm.corsum_matrix(m_range, r_range, tau)
 
 
 def store():
@@ -218,5 +206,5 @@ if __name__ == "__main__":
 
     do(signal, tau, max_m)
 
-
+ 
 
