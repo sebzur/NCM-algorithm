@@ -24,9 +24,6 @@ rank = comm.Get_rank()
 size = comm.Get_size()
 
 
-def max_norm(iterable):
-    return max(iterable)
-
 class NCMatrix(object):
     """ Norm Component Matrix """
 
@@ -37,7 +34,7 @@ class NCMatrix(object):
         self.stop = stop
         self._rows = {}
 
-    def windups(self, m_counts, row, tau, norm=max_norm):
+    def windups(self, m_counts, row, tau):
         """ A generator that iterates over m_counts successive rows,
         starting from the now noumber `row` in the base norm-component
         matrix.
@@ -124,7 +121,7 @@ class NCMatrix(object):
             for k, element in enumerate(matrix[row,:]):
                 matrix[row,:k] += element
 
-    def corsum_matrix(self, m_range, r_range, tau):
+    def corsum_matrix(self, m_range, r_range, tau, normalize=True):
         #factor = 1.0 / ((self.N - m + 1) * self.N)
         # corsum_row = numpy.zeros(len(r_range))
 
@@ -157,7 +154,7 @@ class NCMatrix(object):
             for r in results:
                 summed += r
 
-            if 0:
+            if normalize:
                 for row in range(m_counts):
                     m = row + 1
                     factorA = (self.N - (m - 1) * tau)
@@ -170,41 +167,4 @@ class NCMatrix(object):
             return None
 #        return corsum_matrix.transpose()
 
-
-
-
-def store():
-    if rank == 0 and 0:
-        path = 'tmp/RR/tau_%d/' % tau
-        if not os.path.exists(path):
-            os.makedirs(path)
-        head, tail = os.path.split(signal_data)
-        out = open('tmp/RR/tau_%d/%s' % (tau, tail), 'w')
-        for i,r in enumerate(r_range):
-            #data = [r] + (numpy.log((c_m[i, :] + 0.00000000000000000001))).tolist()
-            data = [r] + c_m[i, :].tolist()
-            out.write("\t".join(["%f" % z for z in data]) + '\n')
-
-
-        time_out = open('tmp/RR/time', 'a')
-        splitted = sys.argv[1].split('_')[1]
-        splitted = splitted.split('.')[0]
-        time_out.write('%s\t%s\t%.10f\n' % (sys.argv[1], splitted, time.time() - ts))
-        time_out.close()
-
-if __name__ == "__main__":
-
-    if rank == 0:
-        ts = time.time()
-
-    data_file_name = sys.argv[1]
-    tau = int(sys.argv[2])
-    max_m = int(sys.argv[3])
-
-    rea_reader = rea.REA(data_file_name, skiprows=0)
-    signal = rea_reader.get_signal()
-
-    do(signal, tau, max_m)
-
- 
 
