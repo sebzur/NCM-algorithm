@@ -121,7 +121,7 @@ class NCMatrix(object):
             for k, element in enumerate(matrix[row,:]):
                 matrix[row,:k] += element
 
-    def corsum_matrix(self, m_range, r_range, tau, normalize=True):
+    def corsum_matrix(self, m_range, r_range, tau, normalize=False):
         #factor = 1.0 / ((self.N - m + 1) * self.N)
         # corsum_row = numpy.zeros(len(r_range))
 
@@ -140,7 +140,7 @@ class NCMatrix(object):
         for row_n in range(rank, self.N - 1, size):
             for m_index, row in enumerate(self.windups(m_counts, row_n, tau)):
                 # tutaj na mnozeniu możemy zystać..
-                corsum_matrix[m_index] += self.r_range_filter(row, r_range, a,b)# * 2# * factor
+                corsum_matrix[m_index] += self.r_range_filter(row, r_range, a, b)# * 2# * factor
 
             for key in [k for k in self._rows.keys() if k < row_n]:
                 self._rows.pop(key)
@@ -152,8 +152,10 @@ class NCMatrix(object):
         if rank == 0:
             summed = corsum_matrix = numpy.zeros((m_counts, len(r_range)))
             for r in results:
-                summed += r
-
+                # we scale up the results by a factor 2 due to
+                # triangularity of the NCM matrix 
+                summed += r * 2
+                
             if normalize:
                 for row in range(m_counts):
                     m = row + 1
