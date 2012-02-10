@@ -49,7 +49,6 @@ class Process(object):
             if self.verbose:
                 print('Signal data file is loaded. ')
 
-        print signal[:10]
         self.get_matrix(signal, max_m, tau, output, f_min=0.001, f_max=5, r_steps=100, normalize=normalize)
 
     def get_treshold_range(self, signal, f_min, f_max, steps):
@@ -101,7 +100,7 @@ if __name__ == "__main__":
     parser.add_argument('m', type=int, default=10, help='Embeding dimension (default: 10)')
     parser.add_argument('tau', type=int, default=1, help='Time lag (default: 1)')
     parser.add_argument('output', type=str, help='Output file name')
-    parser.add_argument('--normalize', dest='normalize', action='store_true', help='Should the output be normalized? (default: true)')
+    parser.add_argument('--normalize', dest='normalize', action='store_true', help='Should the output be normalized?')
     args = parser.parse_args()
     # we print out things only on rank 0 (aka master node)
     verbose = rank == 0

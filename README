@@ -10,15 +10,16 @@ To run this software you have to have MPI and mpi4py installed.
 The usage with the MPI interface (an output from $ pyton run.py --help):
 --------------------------------------------------------------------------
 
-usage: run.py [-h] file m tau output
+usage: run.py [-h] [--normalize] file m tau output
 
 NCM algorithm for correlation sums
 
 positional arguments:
-  file        Signal data - single column file or REA format
-  m           Embeding dimension [default = 10]
-  tau         Time lag [default = 1]
-  output      Output file name
+  file         Signal data - single column file or REA format
+  m            Embeding dimension (default: 10)
+  tau          Time lag (default: 1)
+  output       Output file name
 
 optional arguments:
-  -h, --help  show this help message and exit
+  -h, --help   show this help message and exit
+  --normalize  Should the output be normalized?

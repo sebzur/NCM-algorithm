@@ -30,8 +30,8 @@ def correlation_sum(signal, m, tau, r):
 if __name__ == '__main__':
 
     data_file_name = sys.argv[1]
-    tau = int(sys.argv[2])
-    m = int(sys.argv[3])
+    m = int(sys.argv[2])
+    tau = int(sys.argv[3])
 
     rea_reader = rea.REA(data_file_name, skiprows=0)
     signal = rea_reader.get_signal()

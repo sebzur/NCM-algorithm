@@ -121,7 +121,7 @@ class NCMatrix(object):
             for k, element in enumerate(matrix[row,:]):
                 matrix[row,:k] += element
 
-    def corsum_matrix(self, m_range, r_range, tau, normalize=False):
+    def corsum_matrix(self, m_range, r_range, tau, normalize=True):
         #factor = 1.0 / ((self.N - m + 1) * self.N)
         # corsum_row = numpy.zeros(len(r_range))
 
@@ -131,8 +131,6 @@ class NCMatrix(object):
         max_m = m_counts
 
         corsum_matrix = numpy.zeros((m_counts, len(r_range)))
-
- 
 
         a = -(r_range[0] - r_range[-1])/(r_range.size)
         b = r_range[0]
@@ -161,7 +159,8 @@ class NCMatrix(object):
                     m = row + 1
                     factorA = (self.N - (m - 1) * tau)
                     factorB = (self.N - 1 - (m - 1) * tau)
-                    factor = (factorA * factorB)/2.0
+                    #factor = (factorA * factorB)/2.0
+                    factor = (factorA * factorB)
                     summed[row] /= factor
             return summed.transpose()
 
