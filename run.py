@@ -30,7 +30,7 @@ class Process(object):
 
     """
 
-    def __call__(self, filename, max_m, tau, output, f_min=0.001, f_max=5, r_steps=100, verbose=False, normalize=True):
+    def __call__(self, filename, max_m, tau, output, f_min=0.001, f_max=5, r_steps=5000, verbose=False, normalize=True):
         self.verbose = verbose
         root, ext = os.path.splitext(filename)
         if ext.lower() == '.rea':
@@ -49,7 +49,7 @@ class Process(object):
             if self.verbose:
                 print('Signal data file is loaded. ')
 
-        self.get_matrix(signal, max_m, tau, output, f_min=0.001, f_max=5, r_steps=100, normalize=normalize)
+        self.get_matrix(signal, max_m, tau, output, f_min=0.001, f_max=5, r_steps=r_steps, normalize=normalize)
 
     def get_treshold_range(self, signal, f_min, f_max, steps):
         """ Returns the treshold ranges.
@@ -64,7 +64,13 @@ class Process(object):
         r_max = r_std  * f_max
         r_step = (r_max - r_min) / steps
         if self.verbose:
-            print('The corsum matrix will be created for [%.2f, %.2f] tresholds range created with %d steps.' % (r_min, r_max, steps))
+            print('The corsum matrix will be created for [%.2f, %.2f] tresholds range created with %d steps. SD=%.2f' % (r_min, r_max, steps, r_std))
+
+        #normalized_log_spaced = (numpy.logspace(0, 1) - 1)/10.0
+        #delta = r_max - r_min
+        #log_spaced = r_min + normalized_log_spaced * delta
+        #return log_spaced[::-1]
+
         # the r_range array is reverted
         return numpy.arange(r_min, r_max, r_step)[::-1]
         
@@ -101,6 +107,9 @@ if __name__ == "__main__":
     parser.add_argument('tau', type=int, default=1, help='Time lag (default: 1)')
     parser.add_argument('output', type=str, help='Output file name')
     parser.add_argument('--normalize', dest='normalize', action='store_true', help='Should the output be normalized?')
+    parser.add_argument('--rsteps', type=int, default=100, help='Number of treshold values')
+    parser.add_argument('--fmin', type=float, default=0.001, help='SD * f_min - lower value for tresholds range (default: 0.001)')
+    parser.add_argument('--fmax', type=float, default=5.0, help='SD * f_max - upper value for tresholds range (default: 5.0)')
     args = parser.parse_args()
     # we print out things only on rank 0 (aka master node)
     verbose = rank == 0
@@ -108,7 +117,8 @@ if __name__ == "__main__":
         if verbose:
             print('Sorry, at this moment the implementation only allows for tau=1. This will be changed soon. Stay tuned!')
     else:
-        Process()(args.file, args.m, args.tau, output=args.output, verbose=verbose, normalize=args.normalize)
+        Process()(args.file, args.m, args.tau, output=args.output, verbose=verbose, normalize=args.normalize,
+                  f_min=args.fmin, f_max=args.fmax, r_steps=args.rsteps)
 
 
 
