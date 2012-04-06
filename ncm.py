@@ -9,14 +9,6 @@ import time
 import rea
 import itertools
 
-def logistic_map(x, A, length):
-    wynik=[]
-    for i in range(length):
-        x=A*x*(1-x)
-        wynik.append(x)
-    return wynik[200:]
-
-
 from mpi4py import MPI
 comm = MPI.COMM_WORLD
 sub_comm = MPI.COMM_WORLD.Clone()
