@@ -10,7 +10,8 @@ def surface(filename):
         entropy = log_cm_m - log_cm_m_1
         for r_index in range(data.shape[0]):
     	    if not numpy.isnan(entropy[r_index]):
-        	print numpy.log(data[r_index, 0]), column_id - 1, entropy[r_index]
+                if entropy[r_index] >= 0:
+                    print numpy.log(data[r_index, 0]), column_id - 1, entropy[r_index]
         print 
 
 if __name__ == "__main__":
