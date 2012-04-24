@@ -37,7 +37,9 @@ class Process(object):
             if self.verbose:
                 print('Guessing that the file is in REA format...')
             try:
-                rea_reader = rea.REA(args.file, skiprows=0)
+                # we're skipping the first row - this is almost always
+                # the row with column names
+                rea_reader = rea.REA(args.file, skiprows=1)
                 signal = rea_reader.get_signal()
                 if self.verbose:
                     print('OKay, REA is loaded!')
