@@ -15,15 +15,13 @@ sub_comm = MPI.COMM_WORLD.Clone()
 rank = comm.Get_rank()
 size = comm.Get_size()
 
-
 class NCMatrix(object):
     """ Norm Component Matrix """
 
     def __init__(self, series, start, stop):
         self.series = series
+        self.max_diff = self.series.max() - self.series.min()
         self.N = len(self.series)
-        self.start = start
-        self.stop = stop
         self._rows = {}
 
     def windups(self, m_counts, row, tau):
@@ -89,33 +87,33 @@ class NCMatrix(object):
         counts = []
         for r in r_range: # r_range have to be sorted!
             row = row.compress(row <= r)
-            counts.append(len(row))
+            counts.append(len(row)) 
         return numpy.array(counts)
+
 
     def r_range_filter(self, row, r_range, a, b):
         # Iterates over the al row elements and check the
         # number of the existance od the elements lower than
         # the filter value applied.
+        # --------
         v = ((row - b)/a).astype('int')
+        if numpy.any(v<0):
+            raise ValueError
         v.sort()
         z = numpy.zeros(r_range.size)
         for k, v in itertools.groupby(v):
-            #z[:k] += len(list(v))
-            try:
-                z[k-1] += len(list(v))
-            except IndexError:
-                indeks = 0 if k < 0 else r_range.size - 1
-                z[indeks] += len(list(v))
+            z[:k+1] += len(list(v))
         return z
 
-    def multi(self, matrix, tresholds):
+    def _multi(self, matrix, tresholds):
+        # depraceted, do not use
         for row in range(matrix.shape[0]):
             for k, element in enumerate(matrix[row,:]):
                 matrix[row,:k] += element
 
-    def corsum_matrix(self, m_range, r_range, tau, normalize=True):
-        #factor = 1.0 / ((self.N - m + 1) * self.N)
-        # corsum_row = numpy.zeros(len(r_range))
+    def corsum_matrix(self, m_range, r_range, tau, normalize=True, selfmatches=False):
+        if r_range.max() < self.max_diff:
+            raise ValueError("R range maximum has to be greater then the signal max diff")
 
         # when parallel aprochach is in the case:
         # We can scan thourgh the matrix in parallel
@@ -124,40 +122,48 @@ class NCMatrix(object):
 
         corsum_matrix = numpy.zeros((m_counts, len(r_range)))
 
-        a = -(r_range[0] - r_range[-1])/(r_range.size)
+        a = -(r_range[0] - r_range[-1])/(r_range.size -1)
         b = r_range[0]
+
 
         for row_n in range(rank, self.N - 1, size):
             for m_index, row in enumerate(self.windups(m_counts, row_n, tau)):
-                # tutaj na mnozeniu możemy zystać..
-                corsum_matrix[m_index] += self.r_range_filter(row, r_range, a, b)# * 2# * factor
-
+                corsum_matrix[m_index] += self.r_range_filter(row, r_range, a, b)
             for key in [k for k in self._rows.keys() if k < row_n]:
                 self._rows.pop(key)
-
-        self.multi(corsum_matrix, r_range)
+#        self.multi(corsum_matrix, r_range)
 
 
         results = comm.gather(corsum_matrix, root=0)
         if rank == 0:
+
             summed = corsum_matrix = numpy.zeros((m_counts, len(r_range)))
             for r in results:
                 # we scale up the results by a factor 2 due to
                 # triangularity of the NCM matrix 
                 summed += r * 2
+
+            if selfmatches:
+                for row in range(m_counts):
+                    m = row + 1
+                    offset = (self.N - (m - 1) * tau)
+                    summed[row] += offset
                 
             if normalize:
                 for row in range(m_counts):
                     m = row + 1
                     factorA = (self.N - (m - 1) * tau)
-                    factorB = (self.N - 1 - (m - 1) * tau)
-                    #factor = (factorA * factorB)/2.0
+                    if selfmatches:
+                        factorB = (self.N  - (m - 1) * tau)
+                    else:
+                        factorB = (self.N - 1 - (m - 1) * tau)
                     factor = (factorA * factorB)
                     summed[row] /= factor
+
             return summed.transpose()
 
         else:
             return None
-#        return corsum_matrix.transpose()
+
 
 

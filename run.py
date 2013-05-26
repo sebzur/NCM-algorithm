@@ -30,7 +30,7 @@ class Process(object):
 
     """
 
-    def __call__(self, filename, max_m, tau, output, f_min=0.001, f_max=5, r_steps=5000, verbose=False, normalize=True):
+    def __call__(self, filename, max_m, tau, output, usecol, f_min, f_max, r_steps, verbose=False, normalize=True, selfmatches=False):
         self.verbose = verbose
         root, ext = os.path.splitext(filename)
         if ext.lower() == '.rea':
@@ -39,7 +39,8 @@ class Process(object):
             try:
                 # we're skipping the first row - this is almost always
                 # the row with column names
-                rea_reader = rea.REA(args.file, skiprows=1)
+                #rea_reader = rea.REA(args.file, skiprows=1, usecols=(1,), only_valid=True)
+                rea_reader = rea.REA(args.file, skiprows=6, usecols=(usecol,), only_valid=True)
                 signal = rea_reader.get_signal()
                 if self.verbose:
                     print('OKay, REA is loaded!')
@@ -47,11 +48,13 @@ class Process(object):
                 if self.verbose:
                     print('There is an error: %s' % error)
         else:
-            signal = numpy.loadtxt(args.file)
+            #signal = numpy.loadtxt(args.file)
+            signal = numpy.loadtxt(args.file, skiprows=20, usecols=(usecol,))
             if self.verbose:
                 print('Signal data file is loaded. ')
 
-        self.get_matrix(signal, max_m, tau, output, f_min=0.001, f_max=5, r_steps=r_steps, normalize=normalize)
+        self.get_matrix(signal, max_m, tau, output, f_min=f_min, f_max=f_max, r_steps=r_steps, normalize=normalize, selfmatches=selfmatches)
+
 
     def get_treshold_range(self, signal, f_min, f_max, steps):
         """ Returns the treshold ranges.
@@ -61,6 +64,7 @@ class Process(object):
 
         """
         r_std = signal.std()
+        #r_std = 1.0
 
         r_min =  r_std  * f_min
         r_max = r_std  * f_max
@@ -75,9 +79,9 @@ class Process(object):
 
         # the r_range array is reverted
         return numpy.arange(r_min, r_max, r_step)[::-1]
-        
 
-    def get_matrix(self, signal, max_m, tau, output, f_min, f_max, r_steps, normalize):
+
+    def get_matrix(self, signal, max_m, tau, output, f_min, f_max, r_steps, normalize, selfmatches):
         matrix = ncm.NCMatrix(signal, 0, signal.size)
         r_range = self.get_treshold_range(signal, f_min, f_max, r_steps)
         # now, crete m_range as: [1 .. max_m]
@@ -85,7 +89,7 @@ class Process(object):
         m_range = range(1, max_m + 1)
         if self.verbose:
             print('Preparing for correlation sums matrix calculation. The matrix dimension will be %d x %d.' % (r_steps, max_m))
-        c_m = matrix.corsum_matrix(m_range, r_range, tau, normalize)
+        c_m = matrix.corsum_matrix(m_range, r_range, tau, normalize, selfmatches)
         if rank == 0:
             self.store(c_m, r_range, output)
 
@@ -108,9 +112,11 @@ if __name__ == "__main__":
     parser.add_argument('m', type=int, default=10, help='Embeding dimension (default: 10)')
     parser.add_argument('tau', type=int, default=1, help='Time lag (default: 1)')
     parser.add_argument('output', type=str, help='Output file name')
+    parser.add_argument('usecol', type=int, help='Column with data')
     parser.add_argument('--normalize', dest='normalize', action='store_true', help='Should the output be normalized?')
+    parser.add_argument('--selfmatches', dest='selfmatches', action='store_true', help='Correlate selfmatches?')
     parser.add_argument('--rsteps', type=int, default=100, help='Number of treshold values')
-    parser.add_argument('--fmin', type=float, default=0.001, help='SD * f_min - lower value for tresholds range (default: 0.001)')
+    parser.add_argument('--fmin', type=float, default=0, help='SD * f_min - lower value for tresholds range (default: 0.001)')
     parser.add_argument('--fmax', type=float, default=5.0, help='SD * f_max - upper value for tresholds range (default: 5.0)')
     args = parser.parse_args()
     # we print out things only on rank 0 (aka master node)
@@ -119,8 +125,8 @@ if __name__ == "__main__":
         if verbose:
             print('Sorry, at this moment the implementation only allows for tau=1. This will be changed soon. Stay tuned!')
     else:
-        Process()(args.file, args.m, args.tau, output=args.output, verbose=verbose, normalize=args.normalize,
-                  f_min=args.fmin, f_max=args.fmax, r_steps=args.rsteps)
+        Process()(args.file, args.m, args.tau, output=args.output, usecol=args.usecol, verbose=verbose, normalize=args.normalize,
+                  selfmatches=args.selfmatches, f_min=args.fmin, f_max=args.fmax, r_steps=args.rsteps)
 
 
 
