@@ -49,7 +49,7 @@ class Process(object):
                     print('There is an error: %s' % error)
         else:
             #signal = numpy.loadtxt(args.file)
-            signal = numpy.loadtxt(args.file, skiprows=20, usecols=(usecol,))
+            signal = numpy.loadtxt(args.file, skiprows=0, usecols=(usecol,))
             if self.verbose:
                 print('Signal data file is loaded. ')
 
