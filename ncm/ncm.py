@@ -113,7 +113,7 @@ class NCMatrix(object):
 
     def corsum_matrix(self, m_range, r_range, tau, normalize=True, selfmatches=False):
         if r_range.max() < self.max_diff:
-            raise ValueError("R range maximum has to be greater then the signal max diff")
+            raise ValueError("R range maximum has to be greater then the signal max diff. Max=%s, Max_diff=%s" % (r_range.max(), self.max_diff))
 
         # when parallel aprochach is in the case:
         # We can scan thourgh the matrix in parallel

@@ -22,9 +22,10 @@ class REA(object):
         #sh = numpy.random.shuffle(numpy.arange(self.signal.size))[:self.signal.size/2]
         if only_valid:
             # If only valid flag is set, we filter out all invalid RRs
-            flag = numpy.loadtxt(filename, skiprows=skiprows, usecols=(3,), dtype=numpy.bool)
+            flag = numpy.loadtxt(filename, skiprows=skiprows, usecols=(2,), dtype=numpy.bool)
             #flg = map(lambda x: not bool(x), flag)
-            self.signal = numpy.compress(flag, self.signal, axis=0)
+            #self.signal = numpy.compress(flag, self.signal, axis=0)
+            self.signal = numpy.compress(~flag, self.signal, axis=0)
 
     def get_signal(self):
         return self.signal

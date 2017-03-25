@@ -1,5 +1,5 @@
 #! /bin/bash
-N=4
+N=1
 m=10
 t=1
 steps=1000
@@ -13,6 +13,6 @@ do
 #    tail -n +2 $i > tmp_rea_c
 #    head -n 10000 tmp_rea_c > tmp.rea
     #mpirun -n 5 python ./NCM-algorithm/run.py $i --normalize --rsteps 1000 10 1 `basename $i dat`mat
-    time mpirun -n $N python ../../run.py $i $m $t $2/`basename $i txt`mat $column --fmax=15 --rsteps $steps --normalize
+    time mpirun -n $N python ../../ncm/run.py $i $m $t $2/`basename $i txt`mat $column --fmax=15 --rsteps $steps --normalize
 done
 

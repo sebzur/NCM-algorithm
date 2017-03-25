@@ -30,60 +30,36 @@ class Process(object):
 
     """
 
-    def __call__(self, filename, max_m, tau, output, usecol, f_min, f_max, r_steps, verbose=False, normalize=True, selfmatches=False):
+    def __call__(self, filename, max_m, tau, output, r_min, r_max, r_steps, verbose=False, normalize=True, selfmatches=False, **kwargs):
         self.verbose = verbose
-        root, ext = os.path.splitext(filename)
-        if ext.lower() == '.rea':
-            if self.verbose:
-                print('Guessing that the file is in REA format...')
-            try:
-                # we're skipping the first row - this is almost always
-                # the row with column names
-                #rea_reader = rea.REA(args.file, skiprows=1, usecols=(1,), only_valid=True)
-                rea_reader = rea.REA(args.file, skiprows=6, usecols=(usecol,), only_valid=True)
-                signal = rea_reader.get_signal()
-                if self.verbose:
-                    print('OKay, REA is loaded!')
-            except Exception, error:
-                if self.verbose:
-                    print('There is an error: %s' % error)
-        else:
-            #signal = numpy.loadtxt(args.file)
-            signal = numpy.loadtxt(args.file, skiprows=0, usecols=(usecol,))
-            if self.verbose:
-                print('Signal data file is loaded. ')
-
-        self.get_matrix(signal, max_m, tau, output, f_min=f_min, f_max=f_max, r_steps=r_steps, normalize=normalize, selfmatches=selfmatches)
-
-
-    def get_treshold_range(self, signal, f_min, f_max, steps):
-        """ Returns the treshold ranges.
-
-        Having the signal provided, returns the set of 
-        treshold (r-filters) values.
-
-        """
-        r_std = signal.std()
-        #r_std = 1.0
-
-        r_min =  r_std  * f_min
-        r_max = r_std  * f_max
-        r_step = (r_max - r_min) / steps
+        signal = self.load_rea(filename)
         if self.verbose:
-            print('The corsum matrix will be created for [%.2f, %.2f] tresholds range created with %d steps. SD=%.2f' % (r_min, r_max, steps, r_std))
+            print('Signal data file %s has been loaded...' % filename)
+        self.get_matrix(signal, max_m, tau, output, r_min=r_min, r_max=r_max, r_steps=r_steps, normalize=normalize, selfmatches=selfmatches)
 
-        #normalized_log_spaced = (numpy.logspace(0, 1) - 1)/10.0
-        #delta = r_max - r_min
-        #log_spaced = r_min + normalized_log_spaced * delta
-        #return log_spaced[::-1]
+    def load_rea(self, filename):
+        return rea.REA(args.file).get_signal()
 
+    def load_txt(self, filename):
+        return numpy.loadtxt(args.file, skiprows=0, usecols=(0,))
+
+    def get_treshold_range(self, signal, r_min=0, r_max=None, steps=1000):
+        """ Returns the treshold ranges.
+        Having the signal provided, returns the set of
+        treshold (r-filters) values.
+        """
+        if r_max is None:
+            r_max = signal.max() - signal.min()
+        r_step = (r_max - r_min) / (steps + 0.0)
+        if self.verbose:
+            print('The corsum matrix will be created for [%.2f, %.2f] tresholds range created with %d steps.' % (r_min, r_max, steps))
         # the r_range array is reverted
-        return numpy.arange(r_min, r_max, r_step)[::-1]
+        return numpy.arange(r_min, r_max + r_step, r_step)[::-1]
 
 
-    def get_matrix(self, signal, max_m, tau, output, f_min, f_max, r_steps, normalize, selfmatches):
+    def get_matrix(self, signal, max_m, tau, output, r_min, r_max, r_steps, normalize, selfmatches):
         matrix = ncm.NCMatrix(signal, 0, signal.size)
-        r_range = self.get_treshold_range(signal, f_min, f_max, r_steps)
+        r_range = self.get_treshold_range(signal, r_min, r_max, r_steps)
         # now, crete m_range as: [1 .. max_m]
         # we increment the second `range` argument to get the max_m processed
         m_range = range(1, max_m + 1)
@@ -94,13 +70,10 @@ class Process(object):
             self.store(c_m, r_range, output)
 
 
-    def store(self, c_m, r_range, filename, as_log=False):
+    def store(self, c_m, r_range, filename):
         out = open(filename, 'w')
         for i, r in enumerate(r_range):
-            if as_log:
-                columns = numpy.log((c_m[i, :] + 0.00000000000000000001)).tolist()
-            else:
-                columns = c_m[i, :].tolist()                
+            columns = c_m[i, :].tolist()                
             data = [r] + columns
             out.write("\t".join(["%f" % z for z in data]) + '\n')
         out.close()
@@ -112,12 +85,11 @@ if __name__ == "__main__":
     parser.add_argument('m', type=int, default=10, help='Embeding dimension (default: 10)')
     parser.add_argument('tau', type=int, default=1, help='Time lag (default: 1)')
     parser.add_argument('output', type=str, help='Output file name')
-    parser.add_argument('usecol', type=int, help='Column with data')
     parser.add_argument('--normalize', dest='normalize', action='store_true', help='Should the output be normalized?')
     parser.add_argument('--selfmatches', dest='selfmatches', action='store_true', help='Correlate selfmatches?')
     parser.add_argument('--rsteps', type=int, default=100, help='Number of treshold values')
-    parser.add_argument('--fmin', type=float, default=0, help='SD * f_min - lower value for tresholds range (default: 0.001)')
-    parser.add_argument('--fmax', type=float, default=5.0, help='SD * f_max - upper value for tresholds range (default: 5.0)')
+    parser.add_argument('--rmin', type=float, default=0, help='Starting value for the tresholds range (default: 0)')
+    parser.add_argument('--rmax', type=float, default=None, help='Upper value for tresholds range (default: sig.max - sig.min)')
     args = parser.parse_args()
     # we print out things only on rank 0 (aka master node)
     verbose = rank == 0
@@ -125,8 +97,8 @@ if __name__ == "__main__":
         if verbose:
             print('Sorry, at this moment the implementation only allows for tau=1. This will be changed soon. Stay tuned!')
     else:
-        Process()(args.file, args.m, args.tau, output=args.output, usecol=args.usecol, verbose=verbose, normalize=args.normalize,
-                  selfmatches=args.selfmatches, f_min=args.fmin, f_max=args.fmax, r_steps=args.rsteps)
+        Process()(args.file, args.m, args.tau, output=args.output, verbose=verbose, normalize=args.normalize,
+                  selfmatches=args.selfmatches, r_min=args.rmin, r_max=args.rmax, r_steps=args.rsteps)
 
 
 
