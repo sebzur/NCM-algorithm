@@ -33,3 +33,10 @@ optional arguments:
   --fmin FMIN      SD * f_min - lower value for tresholds range (default:
                    0.001)
   --fmax FMAX      SD * f_max - upper value for tresholds range (default: 5.0)
+  
+  ======================
+  Requirements
+  ======================
+  sudo apt install libopenmpi-dev
+  pip install mpi4py
+  
