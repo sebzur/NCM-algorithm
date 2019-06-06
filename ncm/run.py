@@ -26,5 +26,9 @@ if __name__ == "__main__":
     args = parser.parse_args()
     # we print out things only on rank 0 (aka master node)
     signal = load_data(args.file, usecol=args.usecol)
-    c_m = matrix(signal, args.m, args.tau, rmode=args.rmode, rdiff=args.rdiff, normalize=args.normalize, selfmatches=args.selfmatches)
-    numpy.savetxt(args.output, c_m)
+    matrix = matrix(signal, args.m, args.tau, rmode=args.rmode, rdiff=args.rdiff, wsize=args.wsize, wstep=args.wstep, normalize=args.normalize, selfmatches=args.selfmatches)
+    for idx, c_m in enumerate(matrix):
+    #c_m = matrix(signal, args.m, args.tau, rmode=args.rmode, rdiff=args.rdiff, normalize=args.normalize, selfmatches=args.selfmatches)
+        filename = args.output + str(idx).zfill(6)
+        print filename
+        numpy.savetxt(filename, c_m)

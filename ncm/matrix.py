@@ -34,15 +34,18 @@ class Matrix(object):
     def __init__(self):
         self.verbose = rank == 0
 
-    def __call__(self, signal, max_m, tau, rmode, rdiff, normalize=True, selfmatches=False):
+    def __call__(self, signal, max_m, tau, rmode, rdiff, normalize=True, selfmatches=False, wsize=None, wstep=1):
+        sum_list = []
         if tau > 1:
             print('Sorry, at this moment the implementation only allows for tau=1. This will be changed soon. Stay tuned!')
             return
         if rmode != 'steps' and  rmode != 'diff':
             print('Sorry, You must choose the rmode: "diff" or "steps"!')
             return
-
-        return self.get_matrix(signal, max_m, tau, rmode=rmode, rdiff=rdiff, normalize=normalize, selfmatches=selfmatches)
+        r_range = self.get_treshold_range(signal, rmode, rdiff)
+        for window in self.get_windows(signal, wsize or len(signal), wstep):
+            sum_list.append(self.get_matrix(signal, max_m, tau, r_range, normalize=normalize, selfmatches=selfmatches))
+        return sum_list
 
 
     def get_treshold_range(self, signal, rmode, rdiff):
@@ -60,9 +63,8 @@ class Matrix(object):
             r_step = rdiff
         return numpy.arange(r_min, r_max, r_step)[::-1]
 
-    def get_matrix(self, signal, max_m, tau, rmode, rdiff, normalize, selfmatches):
+    def get_matrix(self, signal, max_m, tau, r_range, normalize, selfmatches):
         matrix = ncm.NCMatrix(signal)
-        r_range = self.get_treshold_range(signal, rmode, rdiff)
         # now, crete m_range as: [1 .. max_m]
         # we increment the second `range` argument to get the max_m processed
         m_range = range(1, max_m + 1)
@@ -76,6 +78,14 @@ class Matrix(object):
             columns = c_m[i, :].tolist()                
             data.append([r] + columns)
         return numpy.array(data)
-            
+
+    
+    def get_windows(self, signal, wsize, wstep):
+        w_start = 0
+        while w_start + wsize <= len(signal):
+            yield signal[w_start:w_start+wsize]
+            w_start += wstep
+
+    
 matrix = Matrix()
         
