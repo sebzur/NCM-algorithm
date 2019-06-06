@@ -18,7 +18,7 @@ size = comm.Get_size()
 class NCMatrix(object):
     """ Norm Component Matrix """
 
-    def __init__(self, series, start, stop):
+    def __init__(self, series):
         self.series = series
         self.max_diff = self.series.max() - self.series.min()
         self.N = len(self.series)
