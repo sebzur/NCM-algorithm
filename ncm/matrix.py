@@ -34,11 +34,11 @@ class Matrix(object):
     def __init__(self):
         self.verbose = rank == 0
 
-    def __call__(self, signal, max_m, tau, output, f_min, f_max, r_steps, normalize=True, selfmatches=False):
+    def __call__(self, signal, max_m, tau, f_min, f_max, r_steps, normalize=True, selfmatches=False):
         if tau > 1:
             print('Sorry, at this moment the implementation only allows for tau=1. This will be changed soon. Stay tuned!')
             return
-        return self.get_matrix(signal, max_m, tau, output, f_min=f_min, f_max=f_max, r_steps=r_steps, normalize=normalize, selfmatches=selfmatches)
+        return self.get_matrix(signal, max_m, tau, f_min=f_min, f_max=f_max, r_steps=r_steps, normalize=normalize, selfmatches=selfmatches)
 
 
     def get_treshold_range(self, signal, f_min, f_max, steps):
@@ -66,7 +66,7 @@ class Matrix(object):
         return numpy.arange(r_min, r_max, r_step)[::-1]
 
 
-    def get_matrix(self, signal, max_m, tau, output, f_min, f_max, r_steps, normalize, selfmatches):
+    def get_matrix(self, signal, max_m, tau, f_min, f_max, r_steps, normalize, selfmatches):
         matrix = ncm.NCMatrix(signal)
         r_range = self.get_treshold_range(signal, f_min, f_max, r_steps)
         # now, crete m_range as: [1 .. max_m]

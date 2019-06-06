@@ -25,5 +25,5 @@ if __name__ == "__main__":
     args = parser.parse_args()
     # we print out things only on rank 0 (aka master node)
     signal = load_data(args.file, usecol=args.usecol)
-    c_m = matrix(signal, args.m, args.tau, output=args.output, f_min=args.fmin, f_max=args.fmax, r_steps=args.rsteps, normalize=args.normalize, selfmatches=args.selfmatches)
+    c_m = matrix(signal, args.m, args.tau, f_min=args.fmin, f_max=args.fmax, r_steps=args.rsteps, normalize=args.normalize, selfmatches=args.selfmatches)
     numpy.savetxt(args.output, c_m)
