@@ -3,10 +3,6 @@
 # Leiden, The Netherlands
 
 import numpy
-import sys
-import os
-import time
-import rea
 import itertools
 
 from mpi4py import MPI
@@ -15,7 +11,7 @@ sub_comm = MPI.COMM_WORLD.Clone()
 rank = comm.Get_rank()
 size = comm.Get_size()
 
-class NCMatrix(object):
+class Matrix:
     """ Norm Component Matrix """
 
     def __init__(self, series, start, stop):
@@ -31,7 +27,7 @@ class NCMatrix(object):
 
         """
         current_row = self.get_row(row, tau)
-        for m in xrange(m_counts):
+        for m in range(m_counts):
             if row + m * tau == self.N - 1:
                 break
             v = self.get_row(row + m * tau, tau)
@@ -77,7 +73,7 @@ class NCMatrix(object):
         # each row is the difference of the [i+1:] series subset with the i-th series element
         # *BUT* the i goes from [0, N -1], the last point is excluded
         #for i in xrange(0, self.N - tau, tau):
-        for i in xrange(0, self.N - tau, 1):
+        for i in range(0, self.N - tau, 1):
             yield self.get_row(i, tau)
 
     def _r_range_filter(self, row, r_range, a, b):

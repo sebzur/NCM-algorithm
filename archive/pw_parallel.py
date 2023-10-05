@@ -72,7 +72,7 @@ if __name__ == '__main__':
     ra = ruelle_sum(signal, m, tau, r_range)
     if rank == 0:
         for i, v in enumerate(ra):
-            print r_range[i], v
+            print(r_range[i], v)
 
     
     
