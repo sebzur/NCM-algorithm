@@ -35,7 +35,7 @@ class Matrix:
                 v = ((current_row - b) / a).astype('int')
                 v = np.sort(v)
                 z = np.zeros(r_range.size)
-                i=0
+
                 for idx in v:
                     z[:idx+1] += 1
                 corsum_matrix[m] += z

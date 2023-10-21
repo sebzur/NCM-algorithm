@@ -13,7 +13,7 @@ sub_comm = MPI.COMM_WORLD.Clone()
 rank = comm.Get_rank()
 size = comm.Get_size()
 
-AVALIBLE_METHODS = ["ncm_basic", "ncm_mpi"]
+AVALIBLE_METHODS = ["ncm_plain", "ncm_mpi", "bruteforce"]
 
 class Process:
     """Arguments processing and evaluation class.
@@ -30,7 +30,7 @@ class Process:
 
     """
 
-    def __call__(self, filename, method, max_m, tau, output, usecol, f_min, f_max, r_steps, skiprows=0, verbose=False,
+    def __call__(self, filename, method, max_m, tau, output, usecol, f_min, f_max, r_steps,wsize, wstep, skiprows=0, verbose=False,
                  normalize=True, selfmatches=True):
 
         if method not in AVALIBLE_METHODS:
@@ -40,9 +40,12 @@ class Process:
         signal = numpy.loadtxt(args.file, skiprows=skiprows, usecols=(usecol,))
         if self.verbose:
             print('Signal data file is loaded. ')
+        number_ordinal = 1
+        for window in self.get_windows(signal, wsize or len(signal), wstep):
+            self.get_matrix(method, window, max_m, tau, output, f_min=f_min, f_max=f_max, r_steps=r_steps,
+                            normalize=normalize, selfmatches=selfmatches, number_ordinal=number_ordinal)
+            number_ordinal += 1
 
-        self.get_matrix(method, signal, max_m, tau, output, f_min=f_min, f_max=f_max, r_steps=r_steps,
-                        normalize=normalize, selfmatches=selfmatches)
 
     def get_treshold_range(self, signal, f_min, f_max, steps):
         """ Returns the treshold ranges.
@@ -70,8 +73,14 @@ class Process:
         # the r_range array is reverted
         return numpy.arange(r_min, r_max, r_step)[::-1]
 
-    def get_matrix(self, method, signal, max_m, tau, output, f_min, f_max, r_steps, normalize, selfmatches):
-        method_module = importlib.import_module("methods."+method, ".")
+    def get_windows(self, signal, w_size, w_step):
+        w_start = 0
+        while w_start + w_size <= len(signal):
+            yield signal[w_start:w_start + w_size]
+            w_start += w_step
+
+    def get_matrix(self, method, signal, max_m, tau, output, f_min, f_max, r_steps, normalize, selfmatches, number_ordinal):
+        method_module = importlib.import_module(f"methods.{method}", ".")
         matrix = method_module.Matrix(signal, 0, signal.size)
         r_range = self.get_treshold_range(signal, f_min, f_max, r_steps)
         # now, crete m_range as: [1 .. max_m]
@@ -82,9 +91,10 @@ class Process:
             r_steps, max_m))
         c_m = matrix.corsum_matrix(m_range, r_range, tau, normalize, selfmatches)
         if rank == 0:
-            self.store(c_m, r_range, output)
+            self.store(c_m, r_range, output, number_ordinal)
 
-    def store(self, c_m, r_range, filename, as_log=False):
+    def store(self, c_m, r_range, filename,number_ordinal, as_log=False):
+        filename = f"{filename}_{str(number_ordinal).zfill(6)}.txt"
         out = open(filename, 'w')
         for i, r in enumerate(r_range):
             if as_log:
@@ -113,6 +123,8 @@ if __name__ == "__main__":
                         help='SD * f_min - lower value for tresholds range (default: 0.001)')
     parser.add_argument('--fmax', type=float, default=5.0,
                         help='SD * f_max - upper value for tresholds range (default: 5.0)')
+    parser.add_argument('--wsize', type=int, default=None, help='Window size')
+    parser.add_argument('--wstep', type=int, default=1, help='Window step')
     args = parser.parse_args()
     # we print out things only on rank 0 (aka master node)
     verbose = rank == 0
@@ -123,7 +135,7 @@ if __name__ == "__main__":
     else:
         Process()(args.file, args.method, args.m, args.tau, output=args.output, usecol=args.usecol, verbose=verbose,
                   normalize=args.normalize, selfmatches=args.selfmatches, skiprows=args.skiprows,
-                  f_min=args.fmin, f_max=args.fmax, r_steps=args.rsteps)
+                  f_min=args.fmin, f_max=args.fmax, r_steps=args.rsteps, wstep=args.wstep, wsize=args.wsize)
 
 
 
