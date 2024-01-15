@@ -1,19 +1,34 @@
 import numpy as np
+from typing import Union
+
+NumberTypes = (int, float)
+
 
 class Matrix:
+
     def __init__(self,signal, start, stop):
+        self.__class__.__name__ = "NCM_plain"
         self.signal = signal
 
-    def corsum_matrix(self, m_range, r_range, tau, normalize, selfmatches):
+    def corsum_matrix(self, m_range, r_range, tau:int=1, normalize=None, selfmatches=None):
         assert tau == 1
         signal = self.signal
-        m_counts = max(m_range) + 1
+        m_counts = max(m_range)
         m_range = range(m_counts)
-        corsum_matrix = np.zeros((m_counts, len(r_range)))
 
         # find linear coefficient for solving algebraic equation
-        a = -(r_range[0] - r_range[-1]) / (r_range.size - 1)
-        b = r_range[0]
+        if isinstance(r_range, NumberTypes):
+            corsum_matrix = np.zeros((m_counts, 1))
+            a = -1
+            b = r_range - 1 if r_range != 0.0 else r_range
+            r_range_size = 1
+        elif isinstance(r_range, np.ndarray):
+            corsum_matrix = np.zeros((m_counts, len(r_range)))
+            a = -(r_range[0] - r_range[-1]) / (r_range.size - 1)
+            b = r_range[0]
+            r_range_size = r_range.size
+        else:
+            raise ValueError("r_range must be number or numpy array of numbers")
 
         # define size of Norm component matrix
         size_X = (len(signal) - (1 - 1) * tau)-1
@@ -34,7 +49,7 @@ class Matrix:
                 # Solve for v using the given coefficients a and b
                 v = ((current_row - b) / a).astype('int')
                 v = np.sort(v)
-                z = np.zeros(r_range.size)
+                z = np.zeros(r_range_size)
 
                 for idx in v:
                     z[:idx+1] += 1
@@ -47,3 +62,7 @@ class Matrix:
             factor = factorA * factorB
             corsum_matrix[m] = corsum_matrix[m] * 2 * 1/factor
         return corsum_matrix.T
+
+
+
+
