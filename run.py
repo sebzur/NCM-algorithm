@@ -34,7 +34,7 @@ class Process:
                  normalize=True, selfmatches=True):
 
         if method not in AVALIBLE_METHODS:
-            raise ValueError("Method for calculating correlation matrix must be one of [npc_basic,npc_mpi]")
+            raise ValueError("Method for calculating correlation matrix must be one of [ncm_plain,ncm_mpi]")
 
         self.verbose = verbose
         signal = numpy.loadtxt(args.file, skiprows=skiprows, usecols=(usecol,))
@@ -105,6 +105,10 @@ class Process:
             out.write("\t".join(["%f" % z for z in data]) + '\n')
         out.close()
 
+def ncm_single_r(file,method,r,):
+    Process()(file, method, m=2, tau=1, output=None, usecol=0, verbose=False,
+              normalize=True, selfmatches=False, skiprows=0,
+              f_min=r, f_max=r, r_steps=1, wstep=None, wsize=1)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='NCM algorithm for correlation sums')
@@ -117,7 +121,7 @@ if __name__ == "__main__":
     parser.add_argument('usecol', type=int, help='Column with data')
     parser.add_argument('--normalize', dest='normalize', action='store_true', help='Should the output be normalized?')
     parser.add_argument('--selfmatches', dest='selfmatches', action='store_true', help='Correlate selfmatches?')
-    parser.add_argument('--skiprows', type=float, default=0, dest='skiprows', help='Skip first n rows from input file')
+    parser.add_argument('--skiprows', type=int, default=0, dest='skiprows', help='Skip first n rows from input file')
     parser.add_argument('--rsteps', type=int, default=100, help='Number of treshold values')
     parser.add_argument('--fmin', type=float, default=0,
                         help='SD * f_min - lower value for tresholds range (default: 0.001)')

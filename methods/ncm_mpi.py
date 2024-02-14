@@ -10,6 +10,7 @@ comm = MPI.COMM_WORLD
 sub_comm = MPI.COMM_WORLD.Clone()
 rank = comm.Get_rank()
 size = comm.Get_size()
+NumberTypes = (int, float)
 
 class Matrix:
     """ Norm Component Matrix """
@@ -87,7 +88,7 @@ class Matrix:
         return numpy.array(counts)
 
 
-    def r_range_filter(self, row, r_range, a, b):
+    def r_range_filter(self, row, r_range_size, a, b):
         # Iterates over the al row elements and check the
         # number of the existance od the elements lower than
         # the filter value applied.
@@ -96,7 +97,7 @@ class Matrix:
         if numpy.any(v<0):
             raise ValueError
         v.sort()
-        z = numpy.zeros(r_range.size)
+        z = numpy.zeros(r_range_size)
         for k, v in itertools.groupby(v):
             z[:k+1] += len(list(v))
         return z
@@ -108,23 +109,35 @@ class Matrix:
                 matrix[row,:k] += element
 
     def corsum_matrix(self, m_range, r_range, tau, normalize=True, selfmatches=False):
-        if r_range.max() < self.max_diff:
+
+        m_counts = max(m_range)
+
+        if isinstance(r_range, NumberTypes):
+            r_range = [r_range]
+            corsum_matrix = numpy.zeros((m_counts, 1))
+            a = -1
+            b = r_range[0]
+            r_range_size = 1
+            r_range_max = r_range[0]
+        elif isinstance(r_range, numpy.ndarray):
+            corsum_matrix = numpy.zeros((m_counts, len(r_range)))
+            a = -(r_range[0] - r_range[-1]) / (r_range.size - 1)
+            b = r_range[0]
+            r_range_size = r_range.size
+            r_range_max = r_range.max()
+        else:
+            raise ValueError("r_range must be number or numpy array of numbers")
+
+
+        if r_range_max < self.max_diff:
             raise ValueError("R range maximum has to be greater then the signal max diff")
 
         # when parallel aprochach is in the case:
         # We can scan thourgh the matrix in parallel
-        m_counts = max(m_range)
-        max_m = m_counts
-
-        corsum_matrix = numpy.zeros((m_counts, len(r_range)))
-
-        a = -(r_range[0] - r_range[-1])/(r_range.size -1)
-        b = r_range[0]
-
 
         for row_n in range(rank, self.N - 1, size):
             for m_index, row in enumerate(self.windups(m_counts, row_n, tau)):
-                corsum_matrix[m_index] += self.r_range_filter(row, r_range, a, b)
+                corsum_matrix[m_index] += self.r_range_filter(row, r_range_size, a, b)
             for key in [k for k in self._rows.keys() if k < row_n]:
                 self._rows.pop(key)
 #        self.multi(corsum_matrix, r_range)
