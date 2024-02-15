@@ -47,10 +47,10 @@ class Process:
             number_ordinal += 1
 
 
-    def get_treshold_range(self, signal, f_min, f_max, steps):
+    def get_treshold_range(self, signal, f_min, f_max=None, steps=None, use_std=False):
         """ Returns the treshold ranges.
 
-        Having the signal provided, returns the set of
+        Having the signal provided, returns the set ofssdwa
         treshold (r-filters) values.
 
         """
@@ -58,6 +58,10 @@ class Process:
         # r_std = 1.0
 
         r_min = r_std * f_min
+        if f_max is None:
+            return numpy.array([f_min])
+        if steps is None:
+            raise ValueError("Steps has to be provided when f_max is defined")
         r_max = r_std * f_max
         r_step = (r_max - r_min) / steps
         if self.verbose:
@@ -87,14 +91,14 @@ class Process:
         # we increment the second `range` argument to get the max_m processed
         m_range = range(1, max_m + 1)
         if self.verbose:
-            print('Preparing for correlation sums matrix calculation. The matrix dimension will be %d x %d.' % (
-            r_steps, max_m))
+            print(f'Preparing for correlation sums matrix calculation. The matrix dimension will be {r_steps} x {max_m}.')
         c_m = matrix.corsum_matrix(m_range, r_range, tau, normalize, selfmatches)
         if rank == 0:
             self.store(c_m, r_range, output, number_ordinal)
 
     def store(self, c_m, r_range, filename,number_ordinal, as_log=False):
-        filename = f"{filename}_{str(number_ordinal).zfill(6)}.txt"
+        #filename = f"{filename}_{str(number_ordinal).zfill(6)}.txt"
+        filename = f"{filename}.txt"
         out = open(filename, 'w')
         for i, r in enumerate(r_range):
             if as_log:
@@ -105,10 +109,6 @@ class Process:
             out.write("\t".join(["%f" % z for z in data]) + '\n')
         out.close()
 
-def ncm_single_r(file,method,r,):
-    Process()(file, method, m=2, tau=1, output=None, usecol=0, verbose=False,
-              normalize=True, selfmatches=False, skiprows=0,
-              f_min=r, f_max=r, r_steps=1, wstep=None, wsize=1)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='NCM algorithm for correlation sums')
@@ -122,10 +122,10 @@ if __name__ == "__main__":
     parser.add_argument('--normalize', dest='normalize', action='store_true', help='Should the output be normalized?')
     parser.add_argument('--selfmatches', dest='selfmatches', action='store_true', help='Correlate selfmatches?')
     parser.add_argument('--skiprows', type=int, default=0, dest='skiprows', help='Skip first n rows from input file')
-    parser.add_argument('--rsteps', type=int, default=100, help='Number of treshold values')
+    parser.add_argument('--rsteps', type=int, default=None, help='Number of treshold values')
     parser.add_argument('--fmin', type=float, default=0,
                         help='SD * f_min - lower value for tresholds range (default: 0.001)')
-    parser.add_argument('--fmax', type=float, default=5.0,
+    parser.add_argument('--fmax', type=float, default=None,
                         help='SD * f_max - upper value for tresholds range (default: 5.0)')
     parser.add_argument('--wsize', type=int, default=None, help='Window size')
     parser.add_argument('--wstep', type=int, default=1, help='Window step')

@@ -111,25 +111,14 @@ class Matrix:
     def corsum_matrix(self, m_range, r_range, tau, normalize=True, selfmatches=False):
 
         m_counts = max(m_range)
+        corsum_matrix = numpy.zeros((m_counts, len(r_range)))
 
-        if isinstance(r_range, NumberTypes):
-            r_range = [r_range]
-            corsum_matrix = numpy.zeros((m_counts, 1))
-            a = -1
-            b = r_range[0]
-            r_range_size = 1
-            r_range_max = r_range[0]
-        elif isinstance(r_range, numpy.ndarray):
-            corsum_matrix = numpy.zeros((m_counts, len(r_range)))
+        if r_range.size > 1:
             a = -(r_range[0] - r_range[-1]) / (r_range.size - 1)
             b = r_range[0]
-            r_range_size = r_range.size
-            r_range_max = r_range.max()
-        else:
-            raise ValueError("r_range must be number or numpy array of numbers")
 
 
-        if r_range_max < self.max_diff:
+        if r_range.max() < self.max_diff and r_range.size > 1:
             raise ValueError("R range maximum has to be greater then the signal max diff")
 
         # when parallel aprochach is in the case:
@@ -137,7 +126,10 @@ class Matrix:
 
         for row_n in range(rank, self.N - 1, size):
             for m_index, row in enumerate(self.windups(m_counts, row_n, tau)):
-                corsum_matrix[m_index] += self.r_range_filter(row, r_range_size, a, b)
+                if r_range.size == 1:
+                    corsum_matrix[m_index] += numpy.array([(row <= r_range[0]).sum()])
+                else:
+                    corsum_matrix[m_index] += self.r_range_filter(row, r_range.size, a, b)
             for key in [k for k in self._rows.keys() if k < row_n]:
                 self._rows.pop(key)
 #        self.multi(corsum_matrix, r_range)

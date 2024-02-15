@@ -16,24 +16,17 @@ class Matrix:
         m_counts = max(m_range)
         m_range = range(m_counts)
 
+
         # find linear coefficient for solving algebraic equation
-        if isinstance(r_range, NumberTypes):
-            corsum_matrix = np.zeros((m_counts, 1))
-            a = -1
-            b = r_range - 1 if r_range != 0.0 else r_range
-            r_range_size = 1
-        elif isinstance(r_range, np.ndarray):
-            corsum_matrix = np.zeros((m_counts, len(r_range)))
+        corsum_matrix = np.zeros((m_counts, len(r_range)))
+        if r_range.size > 1:
             a = -(r_range[0] - r_range[-1]) / (r_range.size - 1)
             b = r_range[0]
-            r_range_size = r_range.size
-        else:
-            raise ValueError("r_range must be number or numpy array of numbers")
+
 
         # define size of Norm component matrix
         size_X = (len(signal) - (1 - 1) * tau)-1
         size_Y = (len(signal) - 1 - (1 - 1) * tau)
-
         # create triangular NCM matrix
         NCM = np.zeros((size_X, size_Y))
         for i_row in range(size_X):
@@ -47,12 +40,14 @@ class Matrix:
                 current_row = NCM[current_row_idx:current_row_idx + (m+1)]
                 current_row = current_row[:,:size_Y-current_row_idx-m].max(axis=0)
                 # Solve for v using the given coefficients a and b
-                v = ((current_row - b) / a).astype('int')
-                v = np.sort(v)
-                z = np.zeros(r_range_size)
-
-                for idx in v:
-                    z[:idx+1] += 1
+                z = np.zeros(r_range.size)
+                if r_range.size == 1:
+                    z[0] += (current_row <= r_range[0]).sum()
+                else:
+                    v = ((current_row - b) / a).astype('int')
+                    v = np.sort(v)
+                    for idx in v:
+                        z[:idx+1] += 1 # check if grouby
                 corsum_matrix[m] += z
 
         # normalize correlation sum, multiply by 2 due to property of triangular matrix and exclude duplicates
