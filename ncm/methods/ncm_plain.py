@@ -1,16 +1,16 @@
 import numpy as np
 from typing import Union
-
+import itertools
 NumberTypes = (int, float)
 
 
 class Matrix:
 
-    def __init__(self,signal, start, stop):
+    def __init__(self,signal):
         self.__class__.__name__ = "NCM_plain"
         self.signal = signal
 
-    def corsum_matrix(self, m_range, r_range, tau:int=1, normalize=None, selfmatches=None):
+    def corsum_matrix(self, m_range, r_range, tau:int=1, normalize=None, selfmatches=None, precision=6):
         assert tau == 1
         signal = self.signal
         m_counts = max(m_range)
@@ -46,8 +46,8 @@ class Matrix:
                 else:
                     v = ((current_row - b) / a).astype('int')
                     v = np.sort(v)
-                    for idx in v:
-                        z[:idx+1] += 1 # check if grouby
+                    for k, v in itertools.groupby(v):
+                        z[:k + 1] += len(list(v))
                 corsum_matrix[m] += z
 
         # normalize correlation sum, multiply by 2 due to property of triangular matrix and exclude duplicates
@@ -56,7 +56,7 @@ class Matrix:
             factorB = (len(signal) - 1 - (m) * tau)
             factor = factorA * factorB
             corsum_matrix[m] = corsum_matrix[m] * 2 * 1/factor
-        return corsum_matrix.T
+        return np.round(corsum_matrix.T, precision)
 
 
 

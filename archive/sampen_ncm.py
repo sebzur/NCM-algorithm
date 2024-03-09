@@ -35,7 +35,7 @@ def calc_correletion_sums(signal: np.ndarray, m: int, r) -> np.ndarray:
         factorB = (len(signal) - 1 - (m) * tau)
         factor = factorA * factorB
         corsum_matrix[m] = corsum_matrix[m] * 2 * 1/factor
-    return corsum_matrix.T
+    return np.round(corsum_matrix.T,6)
 
 
 def calc_samp_en(signal: np.ndarray,r: float) -> float:
@@ -71,17 +71,17 @@ def correlation_sum(signal, r, m, tau):
     return np.round(Corr_sum * (1/Lm) * (1/(Lm-1)),6)
 
 
+if __name__ == "__main__":
+    test_rr = np.loadtxt("100_nsr_800_5.csv")
+    validation_data = np.loadtxt("SZ_out")
 
-test_rr = np.loadtxt("100_nsr_800_5.csv")
-validation_data = np.loadtxt("SZ_out")
+    idx = 0
+    for r in validation_data[:, 0]:
+        cor_sum = calc_correletion_sums(test_rr,m=2,r=r)
+        corr_sum_bf_m1 = correlation_sum(test_rr,r=r,m=1,tau=1)
+        #corr_sum_bf_m2 = correlation_sum(test_rr,r=r,m=2,tau=1)
+        print(r,cor_sum[0] - validation_data[idx,1],cor_sum[0],validation_data[idx,1])
+        print(r,corr_sum_bf_m1 - validation_data[idx,1],corr_sum_bf_m1,validation_data[idx,1])
+        print("next")
 
-idx = 0
-for r in validation_data[:, 0]:
-    cor_sum = calc_correletion_sums(test_rr,m=2,r=r)
-    corr_sum_bf_m1 = correlation_sum(test_rr,r=r,m=1,tau=1)
-    #corr_sum_bf_m2 = correlation_sum(test_rr,r=r,m=2,tau=1)
-    print(r,cor_sum[0] - validation_data[idx,1],cor_sum[0],validation_data[idx,1])
-    print(r,corr_sum_bf_m1 - validation_data[idx,1],corr_sum_bf_m1,validation_data[idx,1])
-    print("next")
-
-    idx +=1
+        idx +=1

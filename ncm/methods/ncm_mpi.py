@@ -15,7 +15,7 @@ NumberTypes = (int, float)
 class Matrix:
     """ Norm Component Matrix """
 
-    def __init__(self, series, start, stop):
+    def __init__(self, series):
         self.series = series
         self.max_diff = self.series.max() - self.series.min()
         self.N = len(self.series)
@@ -108,7 +108,7 @@ class Matrix:
             for k, element in enumerate(matrix[row,:]):
                 matrix[row,:k] += element
 
-    def corsum_matrix(self, m_range, r_range, tau, normalize=True, selfmatches=False):
+    def corsum_matrix(self, m_range, r_range, tau, normalize=True, selfmatches=False, precision=6):
 
         m_counts = max(m_range)
         corsum_matrix = numpy.zeros((m_counts, len(r_range)))
@@ -161,7 +161,7 @@ class Matrix:
                     factor = (factorA * factorB)
                     summed[row] /= factor
 
-            return summed.transpose()
+            return numpy.round(summed.transpose(), precision)
 
         else:
             return None
