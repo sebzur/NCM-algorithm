@@ -1,6 +1,5 @@
 import unittest
 import numpy as np
-import archive.sampen_ncm as sampen
 import ncm.methods.ncm_plain as plain
 import ncm.methods.ncm_mpi as mpi
 import ncm.methods.bruteforce as bf
