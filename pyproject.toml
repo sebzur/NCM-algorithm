@@ -3,7 +3,6 @@ name = "NCM"
 version = "1.0.0"
 authors = [
   { name="Sebastian Żurek", email="sebzur@codelab.pl" },
-    { name="Bartosz Biczuk", email="bbiczuk@gmail.com"},
 ]
 description = "Norm component matrix algorithm for fast calculation of correlation sums"
 readme = "README.md"
@@ -15,5 +14,5 @@ classifiers = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/pypa/sampleproject"
-Issues = "https://github.com/pypa/sampleproject/issues"
+Homepage = "https://github.com/sebzur/NCM-algorithm"
+Issues = "https://github.com/sebzur/NCM-algorithm/issues"

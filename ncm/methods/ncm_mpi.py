@@ -117,7 +117,6 @@ class Matrix:
             a = -(r_range[0] - r_range[-1]) / (r_range.size - 1)
             b = r_range[0]
 
-
         if r_range.max() < self.max_diff and r_range.size > 1:
             raise ValueError("R range maximum has to be greater then the signal max diff")
 
@@ -133,7 +132,6 @@ class Matrix:
             for key in [k for k in self._rows.keys() if k < row_n]:
                 self._rows.pop(key)
 #        self.multi(corsum_matrix, r_range)
-
 
         results = comm.gather(corsum_matrix, root=0)
         if rank == 0:

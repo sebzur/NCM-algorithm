@@ -10,7 +10,7 @@ NumberTypes = (int, float)
 
 
 class Matrix:
-    def __init__(self,signal):
+    def __init__(self, signal):
         self.__class__.__name__ = "Brutefoce_correlation_sums"
         self.signal = signal
 

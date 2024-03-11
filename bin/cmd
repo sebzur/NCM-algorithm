@@ -1,0 +1,2 @@
+#!/bin/bash
+python ncm./run.py YOUR_DATA_PATH ncm_plain 10 1 test1.txt 0 --fmax=15  --rsteps=1000 --normalize

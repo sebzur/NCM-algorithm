@@ -1,12 +1,12 @@
 import argparse
-from api import Process,rank
+from api import Process, rank
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='NCM algorithm for correlation sums')
     parser.add_argument('file', type=str, help='Signal data - single column file or REA format')
     parser.add_argument('method', type=str,
-                        help='Method for calculating correlation sums (classic, NCM, NCM-MPI enhanced)')
+                        help='Method for calculating correlation sums (NCM, NCM-MPI enhanced)')
     parser.add_argument('m', type=int, default=10, help='Embeding dimension (default: 10)')
     parser.add_argument('tau', type=int, default=1, help='Time lag (default: 1)')
     parser.add_argument('output', type=str, help='Output file name')

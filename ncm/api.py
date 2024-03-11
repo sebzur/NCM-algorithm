@@ -3,7 +3,6 @@ import numpy
 import importlib
 
 
-
 # ---------------------------
 # Some default MPI variables
 # ---------------------------
@@ -34,11 +33,8 @@ class Process:
             raise ValueError("Method for calculating correlation matrix must be one of [ncm_plain,ncm_mpi]")
         self.method = method
 
-
     def __call__(self, filename, method, max_m, tau, output, usecol, f_min, f_max, r_steps, wsize, wstep, skiprows=0, verbose=False,
                  normalize=True, selfmatches=True, precision=6):
-
-
 
         self.verbose = verbose
         signal = numpy.loadtxt(filename, skiprows=skiprows, usecols=(usecol,))
@@ -49,7 +45,6 @@ class Process:
             self.get_matrix(window, max_m, tau, output, f_min=f_min, f_max=f_max, r_steps=r_steps,
                             normalize=normalize, selfmatches=selfmatches, number_ordinal=number_ordinal, precision=precision)
             number_ordinal += 1
-
 
     def get_treshold_range(self, signal, f_min, f_max=None, steps=None, use_std=False):
         """ Returns the treshold ranges.
