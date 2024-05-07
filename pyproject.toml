@@ -2,7 +2,8 @@
 name = "NCM"
 version = "1.0.0"
 authors = [
-  { name="Sebastian Żurek", email="sebzur@codelab.pl" },
+  { name="Sebastian Żurek", email="sebzur@codelab.pl" }, { name="Bartosz Biczuk", email="bbiczuk@gmail.com" },
+  { name="Klaudia Wojtiuk ", email="klaudia.wojtiuk.94@gmail.com" }
 ]
 description = "Norm component matrix algorithm for fast calculation of correlation sums"
 readme = "README.md"
